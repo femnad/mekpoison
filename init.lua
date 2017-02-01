@@ -180,7 +180,16 @@ function tile_right_bottom()
     wrap_tile(_div_by_2, _div_by_2, _div_by_2, _div_by_2)
 end
 
+function tile_left_and_right()
+    local ordered_windows = window.orderedwindows()
+    tile_left()
+    window.focus(ordered_windows[2])
+    tile_right()
+    window.focus(ordered_windows[1])
+end
+
 local tileops = {
+    {'d', fn_run_and_exit_non_fs, tile_left_and_right},
     {'h', fn_run_and_exit_non_fs, tile_left},
     {'l', fn_run_and_exit_non_fs, tile_right_bottom},
     {'r', fn_run_and_exit_non_fs, tile_right_top},
