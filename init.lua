@@ -8,6 +8,7 @@ local screen = require "mjolnir.screen"
 local notify = require "mjolnir._asm.notify"
 local hints = require "mjolnir.th.hints"
 local spotify = require "mjolnir.lb.spotify"
+require("mjolnir._asm.ipc")
 
 modal_hotkey.inject()
 
