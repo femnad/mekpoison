@@ -84,20 +84,24 @@ end
 function bind_modal_keys(modal_key, modal_ops)
     bind_modal_key(modal_key, 'escape', fn_run_and_exit, exit_modal)
     for i, v in ipairs(modal_ops) do
-        key, wrapper, fn = v[1], v[2], v[3]
-        bind_modal_key(modal_key, key, wrapper, fn)
+        key, fn, is_fs_safe = v[1], v[2], v[3]
+        if is_fs_safe then
+            bind_modal_key(modal_key, key, fn_run_and_exit, fn)
+        else
+            bind_modal_key(modal_key, key, fn_run_and_exit_non_fs, fn)
+        end
     end
 end
 
 local winops = {
-    {'f', fn_run_and_exit, full_screen},
-    {'g', fn_run_and_exit_non_fs, next_app_window},
-    {'h', fn_run_and_exit_non_fs, show_app_hints},
-    {'m', fn_run_and_exit_non_fs, maximize},
-    {'p', fn_run_and_exit_non_fs, spotify_current_track},
-    {'r', fn_run_and_exit, reload},
-    {'t', fn_run_and_exit_non_fs, next_window},
-    {'w', fn_run_and_exit_non_fs, show_window_hints}
+    {'f', full_screen, true},
+    {'g', next_app_window},
+    {'h', show_app_hints},
+    {'m', maximize},
+    {'p', spotify_current_track},
+    {'r', reload, true},
+    {'t', next_window},
+    {'w', show_window_hints}
 }
 
 kbd_t = modal_hotkey.new({"ctrl", "alt"}, "t")
@@ -111,13 +115,13 @@ end
 
 -- Launch or focus operations
 local lofops = {
-    {'d', fn_run_and_exit, fn_app_launch_or_focus('Dash')},
-    {'g', fn_run_and_exit, fn_app_launch_or_focus('HipChat')},
-    {'h', fn_run_and_exit, fn_app_launch_or_focus('iTerm')},
-    {'m', fn_run_and_exit, fn_app_launch_or_focus('Airmail 3')},
-    {'n', fn_run_and_exit, fn_app_launch_or_focus('Emacs')},
-    {'s', fn_run_and_exit, fn_app_launch_or_focus('Firefox-ESR')},
-    {'t', fn_run_and_exit, fn_app_launch_or_focus('Intellij IDEA CE')}
+    {'d', fn_app_launch_or_focus('Dash'), true},
+    {'g', fn_app_launch_or_focus('HipChat'), true},
+    {'h', fn_app_launch_or_focus('iTerm'), true},
+    {'m', fn_app_launch_or_focus('Airmail 3'), true},
+    {'n', fn_app_launch_or_focus('Emacs'), true},
+    {'s', fn_app_launch_or_focus('Firefox-ESR'), true},
+    {'t', fn_app_launch_or_focus('Intellij IDEA CE'), true}
 }
 
 kbd_h = modal_hotkey.new({"ctrl", "alt"}, "h")
@@ -185,11 +189,11 @@ function tile_left_and_right()
 end
 
 local tileops = {
-    {'d', fn_run_and_exit_non_fs, tile_left_and_right},
-    {'h', fn_run_and_exit_non_fs, tile_left},
-    {'l', fn_run_and_exit_non_fs, tile_right_bottom},
-    {'r', fn_run_and_exit_non_fs, tile_right_top},
-    {'s', fn_run_and_exit_non_fs, tile_right}
+    {'d', tile_left_and_right},
+    {'h', tile_left},
+    {'l', tile_right_bottom},
+    {'r', tile_right_top},
+    {'s', tile_right}
 }
 
 kbd_m = modal_hotkey.new({"ctrl", "alt"}, "m")
