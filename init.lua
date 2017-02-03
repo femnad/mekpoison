@@ -172,12 +172,28 @@ function tile_right()
     wrap_tile(_div_by_2, _zero, _div_by_2, _nop)
 end
 
+function tile_top()
+    wrap_tile(_zero, _zero, _nop, _div_by_2)
+end
+
+function tile_bottom()
+    wrap_tile(_zero, _div_by_2, _nop, _div_by_2)
+end
+
 function tile_right_top()
     wrap_tile(_div_by_2, _zero, _div_by_2, _div_by_2)
 end
 
 function tile_right_bottom()
     wrap_tile(_div_by_2, _div_by_2, _div_by_2, _div_by_2)
+end
+
+function tile_left_top()
+    wrap_tile(_zero, _zero, _div_by_2, _div_by_2)
+end
+
+function tile_left_bottom()
+    wrap_tile(_zero, _div_by_2, _div_by_2, _div_by_2)
 end
 
 function tile_left_and_right()
@@ -189,11 +205,15 @@ function tile_left_and_right()
 end
 
 local tileops = {
-    {'d', tile_left_and_right},
     {'h', tile_left},
+    {'t', tile_bottom},
+    {'n', tile_top},
+    {'s', tile_right},
+    {'d', tile_left_and_right},
+    {'g', tile_left_top},
+    {'c', tile_left_bottom},
     {'l', tile_right_bottom},
     {'r', tile_right_top},
-    {'s', tile_right}
 }
 
 kbd_m = modal_hotkey.new({"ctrl", "alt"}, "m")
