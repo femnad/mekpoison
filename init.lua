@@ -16,16 +16,6 @@ function reload()
     mjolnir:reload()
 end
 
-function list_windows()
-    local windows = window.orderedwindows()
-    for n, w in next, windows, nil do
-        local window_title = window.title(w)
-        if #window_title > 0 then
-            alert.show(n .. ": " .. window_title, 3)
-        end
-    end
-end
-
 function exit_modal()
 end
 
@@ -81,6 +71,12 @@ function show_window_hints()
     hints.windowHints()
 end
 
+function show_app_hints()
+    local fw = window.focusedwindow()
+    local app = fw:application()
+    hints.appHints(app)
+end
+
 function spotify_current_track()
     spotify.displayCurrentTrack()
 end
@@ -96,12 +92,12 @@ end
 local winops = {
     {'f', fn_run_and_exit, full_screen},
     {'g', fn_run_and_exit_non_fs, next_app_window},
-    {'h', fn_run_and_exit_non_fs, show_window_hints},
+    {'h', fn_run_and_exit_non_fs, show_app_hints},
     {'m', fn_run_and_exit_non_fs, maximize},
     {'p', fn_run_and_exit_non_fs, spotify_current_track},
     {'r', fn_run_and_exit, reload},
     {'t', fn_run_and_exit_non_fs, next_window},
-    {'w', fn_run_and_exit_non_fs, list_windows}
+    {'w', fn_run_and_exit_non_fs, show_window_hints}
 }
 
 kbd_t = modal_hotkey.new({"ctrl", "alt"}, "t")
@@ -118,7 +114,7 @@ local lofops = {
     {'d', fn_run_and_exit, fn_app_launch_or_focus('Dash')},
     {'g', fn_run_and_exit, fn_app_launch_or_focus('HipChat')},
     {'h', fn_run_and_exit, fn_app_launch_or_focus('iTerm')},
-    {'m', fn_run_and_exit, fn_app_launch_or_focus('Mail')},
+    {'m', fn_run_and_exit, fn_app_launch_or_focus('Airmail 3')},
     {'n', fn_run_and_exit, fn_app_launch_or_focus('Emacs')},
     {'s', fn_run_and_exit, fn_app_launch_or_focus('Firefox-ESR')},
     {'t', fn_run_and_exit, fn_app_launch_or_focus('Intellij IDEA CE')}
