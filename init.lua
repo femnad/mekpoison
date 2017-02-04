@@ -59,6 +59,10 @@ function show_app_window_hints()
     hs.hints.windowHints(hs.window.focusedWindow():application():allWindows())
 end
 
+function close_application()
+    window.focusedWindow():close()
+end
+
 function bind_modal(modal, modifier, modal_key, fn)
     modal:bind(modifier, modal_key, function()
         fn()
@@ -94,19 +98,20 @@ function switch_prev()
     switcher:previous()
 end
 
-hs.hotkey.bind('ctrl-alt', 'd', nil, switch_next)
-hs.hotkey.bind('ctrl-alt', 'f', nil, switch_prev)
+hs.hotkey.bind('ctrl-alt', 't', nil, switch_next)
+hs.hotkey.bind('ctrl-alt', 'n', nil, switch_prev)
 
 local modal_modifier = 'ctrl-alt'
 local modal_keybindings = {
     ['h'] = {
-        {'f', show_app_window_hints},
         {'g', focus_next_app_window},
         {'c', focus_prev_app_window},
+        {'d', show_app_window_hints},
         {'r', reload},
         {'h', next_window},
         {'t', prev_window},
-        {'b', toggle_expose}
+        {'b', toggle_expose},
+        {'z', close_application}
     },
     ['m'] = {
         {'b', toggle_fullscreen},
