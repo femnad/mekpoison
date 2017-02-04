@@ -93,38 +93,11 @@ function bind_modal_keys(modal_key, modal_ops)
     end
 end
 
-local winops = {
-    {'f', full_screen, true},
-    {'g', next_app_window},
-    {'h', show_app_hints},
-    {'p', spotify_current_track},
-    {'r', reload, true},
-    {'t', next_window},
-    {'w', show_window_hints}
-}
-
-kbd_t = modal_hotkey.new({"ctrl", "alt"}, "t")
-bind_modal_keys(kbd_t, winops)
-
 function fn_app_launch_or_focus(app)
     return function()
         application.launchorfocus(app)
     end
 end
-
--- Launch or focus operations
-local lofops = {
-    {'d', fn_app_launch_or_focus('Dash'), true},
-    {'g', fn_app_launch_or_focus('HipChat'), true},
-    {'h', fn_app_launch_or_focus('iTerm'), true},
-    {'m', fn_app_launch_or_focus('Airmail 3'), true},
-    {'n', fn_app_launch_or_focus('Emacs'), true},
-    {'s', fn_app_launch_or_focus('Firefox-ESR'), true},
-    {'t', fn_app_launch_or_focus('Intellij IDEA CE'), true}
-}
-
-kbd_h = modal_hotkey.new({"ctrl", "alt"}, "h")
-bind_modal_keys(kbd_h, lofops)
 
 function tile(transformer)
     local focused_window = window.focusedwindow()
@@ -203,18 +176,42 @@ function tile_left_and_right()
     window.focus(ordered_windows[1])
 end
 
-local tileops = {
-    {'g', tile_left_top},
-    {'c', tile_left_bottom},
-    {'l', tile_right_bottom},
-    {'r', tile_right_top},
-    {'d', tile_left_and_right},
-    {'h', tile_left},
-    {'t', tile_bottom},
-    {'n', tile_top},
-    {'s', tile_right},
-    {'m', maximize}
+modifier = {"ctrl", "alt"}
+
+keybindings = {
+    ['m'] = {
+        {'g', tile_left_top},
+        {'c', tile_left_bottom},
+        {'l', tile_right_bottom},
+        {'r', tile_right_top},
+        {'d', tile_left_and_right},
+        {'h', tile_left},
+        {'t', tile_bottom},
+        {'n', tile_top},
+        {'s', tile_right},
+        {'m', maximize}
+    },
+    ['t'] = {
+        {'f', full_screen, true},
+        {'g', next_app_window},
+        {'h', show_app_hints},
+        {'p', spotify_current_track},
+        {'r', reload, true},
+        {'t', next_window},
+        {'w', show_window_hints}
+    },
+    ['h'] = {
+        {'d', fn_app_launch_or_focus('Dash'), true},
+        {'g', fn_app_launch_or_focus('HipChat'), true},
+        {'h', fn_app_launch_or_focus('iTerm'), true},
+        {'m', fn_app_launch_or_focus('Airmail 3'), true},
+        {'n', fn_app_launch_or_focus('Emacs'), true},
+        {'s', fn_app_launch_or_focus('Firefox-ESR'), true},
+        {'t', fn_app_launch_or_focus('Intellij IDEA CE'), true}
+    }
 }
 
-kbd_m = modal_hotkey.new({"ctrl", "alt"}, "m")
-bind_modal_keys(kbd_m, tileops)
+for key, chain_bindings in pairs(keybindings) do
+    local modal_start = modal_hotkey.new(modifier, key)
+    bind_modal_keys(modal_start, chain_bindings)
+end
