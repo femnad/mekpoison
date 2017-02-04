@@ -1,6 +1,7 @@
 local alert = hs.alert.show
 local application = hs.application
 local fnutils = hs.fnutils
+local screen = hs.screen
 local window = hs.window
 
 hs.hints.hintChars = {'h', 't', 'n', 's', 'd', 'u', 'e', 'o', 'a', 'i'}
@@ -81,6 +82,99 @@ function maximize()
     fw:maximize()
 end
 
+function _noop(a)
+    return a
+end
+
+function _zero(a)
+    return 0
+end
+
+function _half(a)
+    return a / 2
+end
+
+function transform_window(transformer)
+    local focusedWindow = window.focusedWindow()
+    local mainScreen = screen.mainScreen()
+    local mainFrame = mainScreen:frame()
+    local focusedWindow = window.focusedWindow()
+    local transformedFrame = transformer(mainFrame)
+    focusedWindow:setFrame(transformedFrame)
+end
+
+function _tile(frame, tr_x, tr_y, tr_w, tr_h)
+    frame.x = tr_x(frame.w)
+    frame.y = tr_y(frame.h)
+    frame.w = tr_w(frame.w)
+    frame.h = tr_h(frame.h)
+    return frame
+end
+
+function _tile_left_top(mainFrame)
+    return _tile(mainFrame, _zero, _zero, _half, _half)
+end
+
+function _tile_left_bottom(mainFrame)
+    return _tile(mainFrame, _zero, _half, _half, _half)
+end
+
+function _tile_right_top(mainFrame)
+    return _tile(mainFrame, _half, _zero, _half, _half)
+end
+
+function _tile_right_bottom(mainFrame)
+    return _tile(mainFrame, _half, _half, _half, _half)
+end
+
+function _tile_left(mainFrame)
+    return _tile(mainFrame, _zero, _zero, _half, _noop)
+end
+
+function _tile_right(mainFrame)
+    return _tile(mainFrame, _half, _zero, _half, _noop)
+end
+
+function _tile_top(mainFrame)
+    return _tile(mainFrame, _zero, _zero, _noop, _half)
+end
+
+function _tile_bottom(mainFrame)
+    return _tile(mainFrame, _zero, _half, _noop, _half)
+end
+
+function tile_left_top()
+    transform_window(_tile_left_top)
+end
+
+function tile_left_bottom()
+    transform_window(_tile_left_bottom)
+end
+
+function tile_right_top()
+    transform_window(_tile_right_top)
+end
+
+function tile_right_bottom()
+    transform_window(_tile_right_bottom)
+end
+
+function tile_left()
+    transform_window(_tile_left)
+end
+
+function tile_right()
+    transform_window(_tile_right)
+end
+
+function tile_top()
+    transform_window(_tile_top)
+end
+
+function tile_bottom()
+    transform_window(_tile_bottom)
+end
+
 function toggle_fullscreen()
     local fw = window.focusedWindow()
     fw:toggleFullScreen()
@@ -121,6 +215,14 @@ local modal_keybindings = {
     },
     ['m'] = {
         {'b', toggle_fullscreen},
+        {'g', tile_left_top},
+        {'c', tile_left_bottom},
+        {'r', tile_right_top},
+        {'l', tile_right_bottom},
+        {'h', tile_left},
+        {'t', tile_bottom},
+        {'n', tile_top},
+        {'s', tile_right},
         {'m', maximize}
     },
     ['p'] = {
