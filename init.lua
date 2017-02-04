@@ -97,7 +97,6 @@ local winops = {
     {'f', full_screen, true},
     {'g', next_app_window},
     {'h', show_app_hints},
-    {'m', maximize},
     {'p', spotify_current_track},
     {'r', reload, true},
     {'t', next_window},
@@ -205,15 +204,16 @@ function tile_left_and_right()
 end
 
 local tileops = {
-    {'h', tile_left},
-    {'t', tile_bottom},
-    {'n', tile_top},
-    {'s', tile_right},
-    {'d', tile_left_and_right},
     {'g', tile_left_top},
     {'c', tile_left_bottom},
     {'l', tile_right_bottom},
     {'r', tile_right_top},
+    {'d', tile_left_and_right},
+    {'h', tile_left},
+    {'t', tile_bottom},
+    {'n', tile_top},
+    {'s', tile_right},
+    {'m', maximize}
 }
 
 kbd_m = modal_hotkey.new({"ctrl", "alt"}, "m")
