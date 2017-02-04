@@ -191,16 +191,16 @@ keybindings = {
         {'s', tile_right},
         {'m', maximize}
     },
-    ['t'] = {
+    ['h'] = {
         {'f', full_screen, true},
         {'g', next_app_window},
-        {'h', show_app_hints},
+        {'w', show_app_hints},
         {'p', spotify_current_track},
         {'r', reload, true},
-        {'t', next_window},
-        {'w', show_window_hints}
+        {'h', next_window},
+        {'d', show_window_hints}
     },
-    ['h'] = {
+    ['space'] = {
         {'d', fn_app_launch_or_focus('Dash'), true},
         {'g', fn_app_launch_or_focus('HipChat'), true},
         {'h', fn_app_launch_or_focus('iTerm'), true},
