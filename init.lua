@@ -70,8 +70,10 @@ function bind_modal(modal, modifier, modal_key, fn)
     end)
 end
 
-function exit_modal(modal)
-    modal:exit()
+function fn_exit_modal(modal)
+    return function()
+        modal:exit()
+    end
 end
 
 function maximize()
@@ -130,7 +132,7 @@ local modal_keybindings = {
 
 for mod_key, bindings in pairs(modal_keybindings) do
     local modal = hs.hotkey.modal.new(modal_modifier, mod_key)
-    bind_modal(modal, '', 'escape', exit_modal)
+    bind_modal(modal, '', 'escape', fn_exit_modal)
     for _i, binding in ipairs(bindings) do
         modal_key, modal_function = binding[1], binding[2]
         bind_modal(modal, '', modal_key, modal_function)
