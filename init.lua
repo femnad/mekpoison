@@ -1,217 +1,133 @@
-local application = require "mjolnir.application"
-local hotkey = require "mjolnir.hotkey"
-local window = require "mjolnir.window"
-local fnutils = require "mjolnir.fnutils"
-local modal_hotkey = require "mjolnir._asm.modal_hotkey"
-local alert = require "mjolnir.alert"
-local screen = require "mjolnir.screen"
-local notify = require "mjolnir._asm.notify"
-local hints = require "mjolnir.th.hints"
-local spotify = require "mjolnir.lb.spotify"
-require("mjolnir._asm.ipc")
+local alert = hs.alert.show
+local application = hs.application
+local fnutils = hs.fnutils
+local window = hs.window
 
-modal_hotkey.inject()
+hs.hints.hintChars = {'h', 't', 'n', 's', 'd', 'u', 'e', 'o', 'a', 'i'}
+window.animationDuration = 0
+
+local expose = hs.expose.new()
+local switcher = window.switcher.new(nil, {showThumbnails=false})
 
 function reload()
-    mjolnir:reload()
+    hs.reload()
 end
 
-function exit_modal()
+function toggle_expose()
+    expose:toggleShow()
+end
+
+function focus_other_window(relative_order)
+    local ordered_windows = window.orderedWindows()
+    local nw = ordered_windows[1 + relative_order]
+    if nw ~= nil then
+        nw:focus()
+    else
+        ordered_windows[#ordered_windows]:focus()
+    end
 end
 
 function next_window()
-    window.focus(window.orderedwindows()[2])
+    focus_other_window(1)
 end
 
-function fn_run_and_exit(modal_key, modal_fn)
-    return function()
-        modal_fn()
-        modal_key:exit()
+function prev_window()
+    focus_other_window(-1)
+end
+
+function focus_other_app_window(relative_order)
+    local fw = window.focusedWindow()
+    local app_wins = fw:application():allWindows()
+    local other_wins = fnutils.filter(app_wins, function(w) return w ~= fw end)
+    local nw = other_wins[1 + relative_order]
+    if nw ~= nil then
+        nw:focus()
+    else
+        other_wins[#other_wins]:focus()
     end
 end
 
-function fn_run_and_exit_non_fs(modal_key, modal_fn)
-    return function()
-        local focused_window = window.focusedwindow()
-        if not focused_window:isfullscreen() then
-            modal_fn()
-        end
-        modal_key:exit()
-    end
+function focus_next_app_window()
+    focus_other_app_window(1)
+end
+
+function focus_prev_app_window()
+    focus_other_app_window(-1)
+end
+
+function show_app_window_hints()
+    hs.hints.windowHints(hs.window.focusedWindow():application():allWindows())
+end
+
+function bind_modal(modal, modifier, modal_key, fn)
+    modal:bind(modifier, modal_key, function()
+        fn()
+        modal:exit()
+    end)
+end
+
+function exit_modal(modal)
+    modal:exit()
 end
 
 function maximize()
-  local focused_window = window.focusedwindow()
-  local main_frame = screen.mainscreen():frame()
-  focused_window:setframe(main_frame)
+    local fw = window.focusedWindow()
+    fw:maximize()
 end
 
-function next_app_window()
-    local fw = window.focusedwindow()
-    local app = fw:application()
-    local app_wins = app:allwindows()
-    local main_win = app:mainwindow()
-    for i=1,#app_wins do
-        if app_wins[i] ~= main_win then
-            app_wins[i]:focus()
-        end
-    end
+function toggle_fullscreen()
+    local fw = window.focusedWindow()
+    fw:toggleFullScreen()
 end
 
-function full_screen()
-    local fw = window.focusedwindow()
-    fw:setfullscreen(not fw:isfullscreen())
-end
-
-function bind_modal_key(modal_key, sub_key, wrapper, modal_fn)
-    modal_key:bind({}, sub_key, wrapper(modal_key, modal_fn))
-end
-
-function show_window_hints()
-    hints.windowHints()
-end
-
-function show_app_hints()
-    local fw = window.focusedwindow()
-    local app = fw:application()
-    hints.appHints(app)
-end
-
-function spotify_current_track()
-    spotify.displayCurrentTrack()
-end
-
-function bind_modal_keys(modal_key, modal_ops)
-    bind_modal_key(modal_key, 'escape', fn_run_and_exit, exit_modal)
-    for i, v in ipairs(modal_ops) do
-        key, fn, is_fs_safe = v[1], v[2], v[3]
-        if is_fs_safe then
-            bind_modal_key(modal_key, key, fn_run_and_exit, fn)
-        else
-            bind_modal_key(modal_key, key, fn_run_and_exit_non_fs, fn)
-        end
-    end
-end
-
-function fn_app_launch_or_focus(app)
+function fn_launch_or_focus(app_name)
     return function()
-        application.launchorfocus(app)
+        application.launchOrFocus(app_name)
     end
 end
 
-function tile(transformer)
-    local focused_window = window.focusedwindow()
-    local screen_frame = screen.mainscreen():frame()
-    local window_frame = focused_window:frame()
-    transformer(window_frame, screen_frame)
-    focused_window:setframe(window_frame)
+function switch_next()
+    switcher:next()
 end
 
-function _div(a, b)
-    return a / b
+function switch_prev()
+    switcher:previous()
 end
 
-function _div_by_2(a)
-    return _div(a, 2)
-end
+hs.hotkey.bind('ctrl-alt', 'd', nil, switch_next)
+hs.hotkey.bind('ctrl-alt', 'f', nil, switch_prev)
 
-function _nop(a)
-    return a
-end
-
-function _zero(a)
-    return 0
-end
-
-function _fn_tile_tr(xt, yt, wt, ht)
-    return function(f, s)
-        f.x = xt(s.w)
-        f.y = yt(s.h)
-        f.w = wt(s.w)
-        f.h = ht(s.h)
-    end
-end
-
-function wrap_tile(xt, yt, wt, ht)
-    tile(_fn_tile_tr(xt, yt, wt, ht))
-end
-
-function tile_left()
-    wrap_tile(_zero, _zero, _div_by_2, _nop)
-end
-
-function tile_right()
-    wrap_tile(_div_by_2, _zero, _div_by_2, _nop)
-end
-
-function tile_top()
-    wrap_tile(_zero, _zero, _nop, _div_by_2)
-end
-
-function tile_bottom()
-    wrap_tile(_zero, _div_by_2, _nop, _div_by_2)
-end
-
-function tile_right_top()
-    wrap_tile(_div_by_2, _zero, _div_by_2, _div_by_2)
-end
-
-function tile_right_bottom()
-    wrap_tile(_div_by_2, _div_by_2, _div_by_2, _div_by_2)
-end
-
-function tile_left_top()
-    wrap_tile(_zero, _zero, _div_by_2, _div_by_2)
-end
-
-function tile_left_bottom()
-    wrap_tile(_zero, _div_by_2, _div_by_2, _div_by_2)
-end
-
-function tile_left_and_right()
-    local ordered_windows = window.orderedwindows()
-    tile_left()
-    window.focus(ordered_windows[2])
-    tile_right()
-    window.focus(ordered_windows[1])
-end
-
-modifier = {"ctrl", "alt"}
-
-keybindings = {
+local modal_modifier = 'ctrl-alt'
+local modal_keybindings = {
+    ['h'] = {
+        {'f', show_app_window_hints},
+        {'g', focus_next_app_window},
+        {'c', focus_prev_app_window},
+        {'r', reload},
+        {'h', next_window},
+        {'t', prev_window},
+        {'b', toggle_expose}
+    },
     ['m'] = {
-        {'g', tile_left_top},
-        {'c', tile_left_bottom},
-        {'l', tile_right_bottom},
-        {'r', tile_right_top},
-        {'d', tile_left_and_right},
-        {'h', tile_left},
-        {'t', tile_bottom},
-        {'n', tile_top},
-        {'s', tile_right},
+        {'b', toggle_fullscreen},
         {'m', maximize}
     },
-    ['h'] = {
-        {'f', full_screen, true},
-        {'g', next_app_window},
-        {'w', show_app_hints},
-        {'p', spotify_current_track},
-        {'r', reload, true},
-        {'h', next_window},
-        {'d', show_window_hints}
-    },
     ['space'] = {
-        {'d', fn_app_launch_or_focus('Dash'), true},
-        {'g', fn_app_launch_or_focus('HipChat'), true},
-        {'h', fn_app_launch_or_focus('iTerm'), true},
-        {'m', fn_app_launch_or_focus('Airmail 3'), true},
-        {'n', fn_app_launch_or_focus('Emacs'), true},
-        {'s', fn_app_launch_or_focus('Firefox-ESR'), true},
-        {'t', fn_app_launch_or_focus('Intellij IDEA CE'), true}
+        {'g', fn_launch_or_focus('HipChat')},
+        {'d', fn_launch_or_focus('Dash')},
+        {'h', fn_launch_or_focus('iTerm')},
+        {'t', fn_launch_or_focus('Intellij IDEA CE')},
+        {'n', fn_launch_or_focus('Firefox')},
+        {'s', fn_launch_or_focus('Emacs')},
+        {'m', fn_launch_or_focus('Airmail 3')}
     }
 }
 
-for key, chain_bindings in pairs(keybindings) do
-    local modal_start = modal_hotkey.new(modifier, key)
-    bind_modal_keys(modal_start, chain_bindings)
+for mod_key, bindings in pairs(modal_keybindings) do
+    local modal = hs.hotkey.modal.new(modal_modifier, mod_key)
+    bind_modal(modal, '', 'escape', exit_modal)
+    for _i, binding in ipairs(bindings) do
+        modal_key, modal_function = binding[1], binding[2]
+        bind_modal(modal, '', modal_key, modal_function)
+    end
 end
