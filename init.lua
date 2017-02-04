@@ -92,6 +92,10 @@ function fn_launch_or_focus(app_name)
     end
 end
 
+function run_choosepass()
+    hs.execute('choosepass', true)
+end
+
 function switch_next()
     switcher:next()
 end
@@ -118,6 +122,9 @@ local modal_keybindings = {
     ['m'] = {
         {'b', toggle_fullscreen},
         {'m', maximize}
+    },
+    ['p'] = {
+        {'c', run_choosepass}
     },
     ['space'] = {
         {'g', fn_launch_or_focus('HipChat')},
