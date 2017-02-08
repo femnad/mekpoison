@@ -1,14 +1,16 @@
-local alert = hs.alert.show
 local application = hs.application
+local alert = hs.alert
 local fnutils = hs.fnutils
 local screen = hs.screen
 local window = hs.window
+
+require('hs.ipc')
 
 hs.hints.hintChars = {'h', 't', 'n', 's', 'd', 'u', 'e', 'o', 'a', 'i'}
 window.animationDuration = 0
 
 local expose = hs.expose.new()
-local switcher = window.switcher.new(nil, {showThumbnails=false})
+local switcher = window.switcher.new()
 
 function reload()
     hs.reload()
@@ -16,6 +18,15 @@ end
 
 function toggle_expose()
     expose:toggleShow()
+end
+
+function getFocusedWindow()
+    return window.focusedWindow()
+end
+
+function getMainScreenFrame()
+    local mainScreen = screen.mainScreen()
+    return mainScreen:frame()
 end
 
 function focus_other_window(relative_order)
@@ -60,6 +71,10 @@ function show_app_window_hints()
     hs.hints.windowHints(hs.window.focusedWindow():application():allWindows())
 end
 
+function showHints()
+    hs.hints.windowHints()
+end
+
 function close_application()
     window.focusedWindow():close()
 end
@@ -90,8 +105,20 @@ function _zero(a)
     return 0
 end
 
+function _quarter(a)
+    return a / 4
+end
+
 function _half(a)
     return a / 2
+end
+
+function _3quarters(a)
+    return a * 3 / 4
+end
+
+function _oneEighth(a)
+    return a / 8
 end
 
 function transform_window(transformer)
@@ -180,6 +207,29 @@ function toggle_fullscreen()
     fw:toggleFullScreen()
 end
 
+function tile_double()
+    local orderedWindows = window.orderedWindows()
+    if #orderedWindows >= 2 then
+        tile_right()
+        next_window()
+        tile_left()
+        next_window()
+    end
+end
+
+function _frontAndCenter(mainFrame)
+    return _tile(mainFrame, _oneEighth, _oneEighth, _3quarters, _3quarters)
+end
+
+function frontAndCenter()
+    transform_window(_frontAndCenter)
+end
+
+function showCurrentTimeAndDate()
+    local currentTimeAndDate = os.date("%F %T", os.time())
+    alert.show(currentTimeAndDate, {['radius']=0})
+end
+
 function fn_launch_or_focus(app_name)
     return function()
         application.launchOrFocus(app_name)
@@ -204,26 +254,30 @@ hs.hotkey.bind('ctrl-alt', 'n', nil, switch_prev)
 local modal_modifier = 'ctrl-alt'
 local modal_keybindings = {
     ['h'] = {
-        {'g', focus_next_app_window},
+        {'a', showCurrentTimeAndDate},
+        {'f', showHints},
+        {'g', prev_window},
+        {'r', reload},
         {'c', focus_prev_app_window},
         {'d', show_app_window_hints},
-        {'r', reload},
         {'h', next_window},
-        {'t', prev_window},
+        {'t', focus_next_app_window},
         {'b', toggle_expose},
         {'z', close_application}
     },
     ['m'] = {
-        {'b', toggle_fullscreen},
         {'g', tile_left_top},
         {'c', tile_left_bottom},
         {'r', tile_right_top},
         {'l', tile_right_bottom},
+        {'d', tile_double},
         {'h', tile_left},
         {'t', tile_bottom},
         {'n', tile_top},
         {'s', tile_right},
-        {'m', maximize}
+        {'b', toggle_fullscreen},
+        {'m', maximize},
+        {'w', frontAndCenter}
     },
     ['p'] = {
         {'c', run_choosepass}
