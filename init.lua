@@ -1,5 +1,6 @@
 local application = hs.application
 local alert = hs.alert
+local chooser = hs.chooser
 local fnutils = hs.fnutils
 local screen = hs.screen
 local window = hs.window
@@ -230,6 +231,38 @@ function showCurrentTimeAndDate()
     alert.show(currentTimeAndDate, {['radius']=0})
 end
 
+function getOrderedWindowsWithNonEmptyTitles()
+    return fnutils.filter(
+        window.orderedWindows(), function(w)
+            return #w:title() > 0
+        end)
+end
+
+function showWindowChooser()
+    local orderedWindows = getOrderedWindowsWithNonEmptyTitles()
+    local windowNames = fnutils.imap(
+        orderedWindows, function(window)
+            local application = window:application()
+            return {
+                subText = window:title(),
+                text = application:title(),
+                image = hs.image.imageFromAppBundle(application:bundleID())
+            }
+        end)
+    local windowChooser = chooser.new(
+        function(chosen)
+            if chosen ~= nil then
+                local chosenWindow = fnutils.find(orderedWindows, function(window)
+                    return window:title() == chosen.subText
+                end)
+                chosenWindow:focus()
+            end
+        end)
+    windowChooser:choices(windowNames)
+    windowChooser:searchSubText(true)
+    windowChooser:show()
+end
+
 function fn_launch_or_focus(app_name)
     return function()
         application.launchOrFocus(app_name)
@@ -248,10 +281,8 @@ function switch_prev()
     switcher:previous()
 end
 
-hs.hotkey.bind('ctrl-alt', 't', nil, switch_next)
-hs.hotkey.bind('ctrl-alt', 'n', nil, switch_prev)
 
-local modal_modifier = 'ctrl-alt'
+local base_modifier = 'ctrl-alt'
 local modal_keybindings = {
     ['h'] = {
         {'a', showCurrentTimeAndDate},
@@ -279,9 +310,6 @@ local modal_keybindings = {
         {'m', maximize},
         {'w', frontAndCenter}
     },
-    ['p'] = {
-        {'c', run_choosepass}
-    },
     ['space'] = {
         {'g', fn_launch_or_focus('HipChat')},
         {'d', fn_launch_or_focus('Dash')},
@@ -289,15 +317,26 @@ local modal_keybindings = {
         {'t', fn_launch_or_focus('Intellij IDEA CE')},
         {'n', fn_launch_or_focus('Firefox')},
         {'s', fn_launch_or_focus('Emacs')},
-        {'m', fn_launch_or_focus('Airmail 3')}
+        {'m', fn_launch_or_focus('Airmail 3')},
+        {'space', showWindowChooser}
     }
 }
 
 for mod_key, bindings in pairs(modal_keybindings) do
-    local modal = hs.hotkey.modal.new(modal_modifier, mod_key)
+    local modal = hs.hotkey.modal.new(base_modifier, mod_key)
     bind_modal(modal, '', 'escape', fn_exit_modal)
     for _i, binding in ipairs(bindings) do
         modal_key, modal_function = binding[1], binding[2]
         bind_modal(modal, '', modal_key, modal_function)
     end
+end
+
+local hotkeys = {
+    t = switch_next,
+    n = switch_prev,
+    p = run_choosepass
+}
+
+for key, fn in pairs(hotkeys) do
+    hs.hotkey.bind(base_modifier, key, nil, fn)
 end
