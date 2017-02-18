@@ -1,6 +1,7 @@
 local application = hs.application
 local alert = hs.alert
 local chooser = hs.chooser
+local eventtap = hs.eventtap
 local fnutils = hs.fnutils
 local screen = hs.screen
 local window = hs.window
@@ -292,6 +293,27 @@ function switch_prev()
     switcher:previous()
 end
 
+function typeCredential(credentialType)
+    local credential = hs.execute('getcred ' .. credentialType, true)
+    eventtap.keyStrokes(credential)
+end
+
+function typeLogin()
+    typeCredential('login')
+end
+
+function typePassword()
+    typeCredential('password')
+end
+
+function typeLoginTabPassword()
+    local loginAndPassword = hs.execute('getcred both', true)
+    local _split = fnutils.split(loginAndPassword, '\n')
+    local login, password = _split[1], _split[2]
+    eventtap.keyStrokes(login)
+    eventtap.keyStroke({}, 'tab')
+    eventtap.keyStrokes(password)
+end
 
 local base_modifier = 'ctrl-alt'
 local modal_keybindings = {
@@ -323,7 +345,10 @@ local modal_keybindings = {
         {'v', frontAndCenter50}
     },
     ['p'] = {
-        {'c', run_choosepass, 'ctrl'}
+        {'c', run_choosepass, 'ctrl'},
+        {'l', typeLoginTabPassword, 'ctrl'},
+        {'o', typeLogin, 'ctrl'},
+        {'t', typePassword, 'ctrl'}
     },
     ['space'] = {
         {'g', fn_launch_or_focus('HipChat')},
