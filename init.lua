@@ -52,6 +52,9 @@ function focus_other_app_window(relative_order)
     local fw = window.focusedWindow()
     local app_wins = fw:application():allWindows()
     local other_wins = fnutils.filter(app_wins, function(w) return w ~= fw end)
+    if #other_wins < 1 then
+        return
+    end
     local nw = other_wins[1 + relative_order]
     if nw ~= nil then
         nw:focus()
@@ -226,6 +229,14 @@ function frontAndCenter()
     transform_window(_frontAndCenter)
 end
 
+function _frontAndCenter50(mainFrame)
+    return _tile(mainFrame, _quarter, _quarter, _half, _half)
+end
+
+function frontAndCenter50()
+    transform_window(_frontAndCenter50)
+end
+
 function showCurrentTimeAndDate()
     local currentTimeAndDate = os.date("%F %T", os.time())
     alert.show(currentTimeAndDate, {['radius']=0})
@@ -308,7 +319,11 @@ local modal_keybindings = {
         {'s', tile_right},
         {'b', toggle_fullscreen},
         {'m', maximize},
-        {'w', frontAndCenter}
+        {'w', frontAndCenter},
+        {'v', frontAndCenter50}
+    },
+    ['p'] = {
+        {'c', run_choosepass, 'ctrl'}
     },
     ['space'] = {
         {'g', fn_launch_or_focus('HipChat')},
@@ -326,15 +341,18 @@ for mod_key, bindings in pairs(modal_keybindings) do
     local modal = hs.hotkey.modal.new(base_modifier, mod_key)
     bind_modal(modal, '', 'escape', fn_exit_modal)
     for _i, binding in ipairs(bindings) do
+        local modifier = binding[3]
+        if not modifier then
+            modifier = ''
+        end
         modal_key, modal_function = binding[1], binding[2]
-        bind_modal(modal, '', modal_key, modal_function)
+        bind_modal(modal, modifier, modal_key, modal_function)
     end
 end
 
 local hotkeys = {
     t = switch_next,
     n = switch_prev,
-    p = run_choosepass
 }
 
 for key, fn in pairs(hotkeys) do
