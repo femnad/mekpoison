@@ -1,5 +1,7 @@
 local application = hs.application
 local alert = hs.alert
+local battery = hs.battery
+local caffeinate = hs.caffeinate
 local chooser = hs.chooser
 local eventtap = hs.eventtap
 local fnutils = hs.fnutils
@@ -13,6 +15,8 @@ window.animationDuration = 0
 
 local expose = hs.expose.new()
 local switcher = window.switcher.new()
+
+local CREDENTIAL_SCRIPT = 'getcred'
 
 function reload()
     hs.reload()
@@ -238,9 +242,13 @@ function frontAndCenter50()
     transform_window(_frontAndCenter50)
 end
 
+function _alert(message)
+    alert.show(message, {['radius']=0})
+end
+
 function showCurrentTimeAndDate()
     local currentTimeAndDate = os.date("%F %T", os.time())
-    alert.show(currentTimeAndDate, {['radius']=0})
+    _alert(currentTimeAndDate)
 end
 
 function getOrderedWindowsWithNonEmptyTitles()
@@ -293,9 +301,31 @@ function switch_prev()
     switcher:previous()
 end
 
-function typeCredential(credentialType)
-    local credential = hs.execute('getcred ' .. credentialType, true)
-    eventtap.keyStrokes(credential)
+function showBatteryStats()
+    local charge = battery.percentage()
+    local remaining = battery.timeRemaining()
+    local alertText = 'Battery: Charge ' .. charge .. '%\nRemaining: ' .. remaining .. ' minutes'
+    _alert(alertText)
+end
+
+function runGetCred(arguments)
+    local command = CREDENTIAL_SCRIPT .. ' ' .. arguments
+    local response, successful = hs.execute(command, true)
+    if successful then
+        return response
+    end
+end
+
+function typeCredential(credentialType, typeEnter)
+    local credential = runGetCred(credentialType)
+    if credential then
+        eventtap.keyStrokes(credential)
+        if typeEnter then
+            eventtap.keyStroke({}, 'return')
+        else
+            _alert('Go Ahead, TACCOM')
+        end
+    end
 end
 
 function typeLogin()
@@ -306,13 +336,21 @@ function typePassword()
     typeCredential('password')
 end
 
+function typePasswordAndEnter()
+    typeCredential('password', true)
+end
+
 function typeLoginTabPassword()
-    local loginAndPassword = hs.execute('getcred both', true)
+    local loginAndPassword = runGetCred('both')
     local _split = fnutils.split(loginAndPassword, '\n')
     local login, password = _split[1], _split[2]
     eventtap.keyStrokes(login)
     eventtap.keyStroke({}, 'tab')
     eventtap.keyStrokes(password)
+end
+
+function startScreensaver()
+    caffeinate.startScreensaver()
 end
 
 local base_modifier = 'ctrl-alt'
@@ -322,11 +360,13 @@ local modal_keybindings = {
         {'f', showHints},
         {'g', prev_window},
         {'r', reload},
+        {'l', startScreensaver},
         {'c', focus_prev_app_window},
         {'d', show_app_window_hints},
         {'h', next_window},
         {'t', focus_next_app_window},
         {'b', toggle_expose},
+        {'v', showBatteryStats},
         {'z', close_application}
     },
     ['m'] = {
@@ -345,10 +385,11 @@ local modal_keybindings = {
         {'v', frontAndCenter50}
     },
     ['p'] = {
-        {'c', run_choosepass, 'ctrl'},
-        {'l', typeLoginTabPassword, 'ctrl'},
         {'o', typeLogin, 'ctrl'},
-        {'t', typePassword, 'ctrl'}
+        {'e', typePasswordAndEnter, 'ctrl'},
+        {'c', run_choosepass, 'ctrl'},
+        {'t', typePassword, 'ctrl'},
+        {'s', typeLoginTabPassword, 'ctrl'}
     },
     ['space'] = {
         {'g', fn_launch_or_focus('HipChat')},
