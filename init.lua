@@ -254,15 +254,18 @@ end
 function getShowableWindows()
     return fnutils.filter(
         window.orderedWindows(), function(w)
-            local bundleID = w:application():bundleID()
-            return #w:title() > 0 and bundleID ~= nil
+            return #w:title() > 0
         end)
 end
 
 function getAppImage(window)
     local application = window:application()
     local appBundleID = application:bundleID()
-    return hs.image.imageFromAppBundle(appBundleID)
+    if appBundleID == nil then
+        return hs.image.imageFromName('NSInfo')
+    else
+        return hs.image.imageFromAppBundle(appBundleID)
+    end
 end
 
 function showWindowChooser()
