@@ -353,8 +353,20 @@ function startScreensaver()
     caffeinate.startScreensaver()
 end
 
+function saneBackTick()
+    eventtap.keyStroke({}, 50)
+end
+
+function saneTilde()
+    eventtap.keyStroke({'shift'}, 50)
+end
+
 local base_modifier = 'ctrl-alt'
 local modal_keybindings = {
+    ['d'] = {
+        {'§', saneBackTick},
+        {'§', saneTilde, 'shift'},
+    },
     ['h'] = {
         {'a', showCurrentTimeAndDate},
         {'f', showHints},
