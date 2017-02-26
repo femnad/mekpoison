@@ -251,22 +251,28 @@ function showCurrentTimeAndDate()
     _alert(currentTimeAndDate)
 end
 
-function getOrderedWindowsWithNonEmptyTitles()
+function getShowableWindows()
     return fnutils.filter(
         window.orderedWindows(), function(w)
-            return #w:title() > 0
+            local bundleID = w:application():bundleID()
+            return #w:title() > 0 and bundleID ~= nil
         end)
 end
 
+function getAppImage(window)
+    local application = window:application()
+    local appBundleID = application:bundleID()
+    return hs.image.imageFromAppBundle(appBundleID)
+end
+
 function showWindowChooser()
-    local orderedWindows = getOrderedWindowsWithNonEmptyTitles()
+    local orderedWindows = getShowableWindows()
     local windowNames = fnutils.imap(
         orderedWindows, function(window)
-            local application = window:application()
             return {
                 subText = window:title(),
-                text = application:title(),
-                image = hs.image.imageFromAppBundle(application:bundleID())
+                text = window:application():title(),
+                image = getAppImage(window)
             }
         end)
     local windowChooser = chooser.new(
