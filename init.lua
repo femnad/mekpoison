@@ -4,8 +4,11 @@ local battery = hs.battery
 local caffeinate = hs.caffeinate
 local chooser = hs.chooser
 local eventtap = hs.eventtap
+local execute = hs.execute
 local fnutils = hs.fnutils
+local pasteboard = hs.pasteboard
 local screen = hs.screen
+local timer = hs.timer
 local window = hs.window
 
 require('hs.ipc')
@@ -17,6 +20,8 @@ local expose = hs.expose.new()
 local switcher = window.switcher.new()
 
 local CREDENTIAL_SCRIPT = 'getcred'
+local MODAL_TIMEOUT = 5
+local PASTE_TIMEOUT = 20
 
 function reload()
     hs.reload()
@@ -88,7 +93,23 @@ function close_application()
     window.focusedWindow():close()
 end
 
+function modalTimeout(modal)
+    return timer.doAfter(MODAL_TIMEOUT, function()
+        modal:exit()
+    end)
+end
+
 function bind_modal(modal, modifier, modal_key, fn)
+    local canceler = nil
+
+    function modal:entered()
+        canceler = modalTimeout(modal)
+    end
+
+    function modal:exited()
+        canceler:stop()
+    end
+
     modal:bind(modifier, modal_key, function()
         fn()
         modal:exit()
@@ -298,10 +319,6 @@ function fn_launch_or_focus(app_name)
     end
 end
 
-function run_choosepass()
-    hs.execute('choosepass', true)
-end
-
 function switch_next()
     switcher:next()
 end
@@ -319,7 +336,7 @@ end
 
 function runGetCred(arguments)
     local command = CREDENTIAL_SCRIPT .. ' ' .. arguments
-    local response, successful = hs.execute(command, true)
+    local response, successful = execute(command, true)
     if successful then
         return response
     end
@@ -335,6 +352,15 @@ function typeCredential(credentialType, typeEnter)
             _alert('Go Ahead, TACCOM')
         end
     end
+end
+
+function copyPassword()
+    local password = runGetCred('password')
+    pasteboard.setContents(password)
+    _alert('You have ' .. PASTE_TIMEOUT .. ' seconds to comply')
+    timer.doAfter(PASTE_TIMEOUT, function()
+        pasteboard.setContents('')
+    end)
 end
 
 function typeLogin()
@@ -396,7 +422,7 @@ local modal_keybindings = {
     ['p'] = {
         {'o', typeLogin, 'ctrl'},
         {'e', typePasswordAndEnter, 'ctrl'},
-        {'c', run_choosepass, 'ctrl'},
+        {'c', copyPassword, 'ctrl'},
         {'t', typePassword, 'ctrl'},
         {'s', typeLoginTabPassword, 'ctrl'}
     },
@@ -405,7 +431,7 @@ local modal_keybindings = {
         {'d', fn_launch_or_focus('Dash')},
         {'h', fn_launch_or_focus('iTerm')},
         {'t', fn_launch_or_focus('Intellij IDEA CE')},
-        {'n', fn_launch_or_focus('Firefox')},
+        {'n', fn_launch_or_focus('Nightly')},
         {'s', fn_launch_or_focus('Emacs')},
         {'m', fn_launch_or_focus('Airmail 3')},
         {'space', showWindowChooser}
