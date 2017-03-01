@@ -375,13 +375,24 @@ function typePasswordAndEnter()
     typeCredential('password', true)
 end
 
-function typeLoginTabPassword()
+function _typeBoth(endWithReturn)
     local loginAndPassword = runGetCred('both')
     local _split = fnutils.split(loginAndPassword, '\n')
     local login, password = _split[1], _split[2]
     eventtap.keyStrokes(login)
     eventtap.keyStroke({}, 'tab')
     eventtap.keyStrokes(password)
+    if endWithReturn then
+        eventtap.keyStroke({}, 'return')
+    end
+end
+
+function typeLoginTabPassword()
+    _typeBoth(false)
+end
+
+function typeLoginTabPasswordEnter()
+    _typeBoth(true)
 end
 
 function startScreensaver()
@@ -423,6 +434,7 @@ local modal_keybindings = {
         {'o', typeLogin, 'ctrl'},
         {'e', typePasswordAndEnter, 'ctrl'},
         {'c', copyPassword, 'ctrl'},
+        {'l', typeLoginTabPasswordEnter, 'ctrl'},
         {'t', typePassword, 'ctrl'},
         {'s', typeLoginTabPassword, 'ctrl'}
     },
