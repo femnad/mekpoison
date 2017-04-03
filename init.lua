@@ -342,20 +342,25 @@ function runGetCred(arguments)
     end
 end
 
-function typeCredential(credentialType, typeEnter)
+function typeCredential(credentialType, typeEnter, notify)
     local credential = runGetCred(credentialType)
     if credential then
         eventtap.keyStrokes(credential)
         if typeEnter then
             eventtap.keyStroke({}, 'return')
-        else
+        end
+        if notify then
             _alert('Go Ahead, TACCOM')
         end
     end
 end
 
+function _getPassword()
+    return runGetCred('password')
+end
+
 function copyPassword()
-    local password = runGetCred('password')
+    local password = _getPassword()
     pasteboard.setContents(password)
     _alert('You have ' .. PASTE_TIMEOUT .. ' seconds to comply')
     timer.doAfter(PASTE_TIMEOUT, function()
@@ -364,7 +369,7 @@ function copyPassword()
 end
 
 function typeLogin()
-    typeCredential('login')
+    typeCredential('login', false, false)
 end
 
 function typePassword()
@@ -393,6 +398,13 @@ end
 
 function typeLoginTabPasswordEnter()
     _typeBoth(true)
+end
+
+function typePasswordTwice()
+    local password = _getPassword()
+    eventtap.keyStrokes(password)
+    eventtap.keyStroke({}, 'tab')
+    eventtap.keyStrokes(password)
 end
 
 function startScreensaver()
@@ -436,16 +448,17 @@ local modal_keybindings = {
         {'c', copyPassword, 'ctrl'},
         {'l', typeLoginTabPasswordEnter, 'ctrl'},
         {'t', typePassword, 'ctrl'},
+        {'u', typePasswordTwice, 'ctrl'},
         {'s', typeLoginTabPassword, 'ctrl'}
     },
     ['space'] = {
         {'g', fn_launch_or_focus('HipChat')},
         {'d', fn_launch_or_focus('Dash')},
         {'h', fn_launch_or_focus('iTerm')},
-        {'t', fn_launch_or_focus('Intellij IDEA CE')},
-        {'n', fn_launch_or_focus('Nightly')},
+        {'t', fn_launch_or_focus('Nightly')},
+        {'n', fn_launch_or_focus('Intellij IDEA')},
         {'s', fn_launch_or_focus('Emacs')},
-        {'m', fn_launch_or_focus('Airmail 3')},
+        {'m', fn_launch_or_focus('Mail')},
         {'space', showWindowChooser}
     }
 }
