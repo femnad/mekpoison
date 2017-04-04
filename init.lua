@@ -334,9 +334,13 @@ function showBatteryStats()
     _alert(alertText)
 end
 
+function executeCommand(command)
+    return execute(command, true)
+end
+
 function runGetCred(arguments)
     local command = CREDENTIAL_SCRIPT .. ' ' .. arguments
-    local response, successful = execute(command, true)
+    local response, successful = executeCommand(command)
     if successful then
         return response
     end
@@ -411,6 +415,19 @@ function startScreensaver()
     caffeinate.startScreensaver()
 end
 
+function appRunner(appSelection)
+    application.launchOrFocus(appSelection.text)
+end
+
+function runApp()
+    local chooser = hs.chooser.new(appRunner)
+    local appsList = executeCommand('ls /Applications')
+    local apps = fnutils.split(appsList, '\n')
+    local appsTable = fnutils.imap(apps, function(appName) return {text=appName} end)
+    chooser:choices(appsTable)
+    chooser:show()
+end
+
 local ctrl_alt_modifier = 'ctrl-alt'
 
 local ctrl_alt_modal_keybindings = {
@@ -469,6 +486,16 @@ local ctrl_alt_hotkeys = {
     n = switch_prev,
 }
 
+ctrl_t_modifier = 'ctrl'
+
+local ctrl_t_modal_keybindings = {
+    ['t'] = {
+        {'e', runApp},
+        {'m', maximize},
+        {'t', next_window}
+    }
+}
+
 function bind_modal_keybindings(modal_keybindings, base_modifier)
     for mod_key, bindings in pairs(modal_keybindings) do
         local modal = hs.hotkey.modal.new(base_modifier, mod_key)
@@ -490,5 +517,7 @@ function bind_hotkeys(hotkeys, base_modifier)
     end
 end
 
-bind_modal_keybindings(ctrl_alt_modal_keybindings, ctrl_alt_modifier)
-bind_hotkeys(ctrl_alt_hotkeys, ctrl_alt_modifier)
+--bind_modal_keybindings(ctrl_alt_modal_keybindings, ctrl_alt_modifier)
+--bind_hotkeys(ctrl_alt_hotkeys, ctrl_alt_modifier)
+
+bind_modal_keybindings(ctrl_t_modal_keybindings, ctrl_t_modifier)
