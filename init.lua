@@ -419,13 +419,18 @@ function appRunner(appSelection)
     application.launchOrFocus(appSelection.text)
 end
 
+function getChooserFromCommandResult(aFn, aCommand)
+    local chooser = hs.chooser.new(aFn)
+    local response = executeCommand(aCommand)
+    local items = fnutils.split(appsList, '\n')
+    local itemsTable = fnutils.imap(items, function(itemName) return {text=itemName} end)
+    chooser:choices(itemsTable)
+    return chooser
+end
+
 function runApp()
-    local chooser = hs.chooser.new(appRunner)
-    local appsList = executeCommand('ls /Applications')
-    local apps = fnutils.split(appsList, '\n')
-    local appsTable = fnutils.imap(apps, function(appName) return {text=appName} end)
-    chooser:choices(appsTable)
-    chooser:show()
+    local appChooser = getChooserFromCommandResult(appRunner, 'ls /Applications')
+    appChooser:show()
 end
 
 local ctrl_alt_modifier = 'ctrl-alt'
@@ -492,7 +497,9 @@ local ctrl_t_modal_keybindings = {
     ['t'] = {
         {'e', runApp},
         {'m', maximize},
-        {'t', next_window}
+        {'p', typePassword},
+        {'t', next_window},
+        {'w', showWindowChooser}
     }
 }
 
