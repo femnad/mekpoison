@@ -421,14 +421,15 @@ function appRunner(appSelection)
 end
 
 function passTyper(passwordName)
-    local password = executeCommand(passwordName.text)
+    local passwordResponse = executeCommand('pass ' .. passwordName.text)
+    local password = fnutils.split(passwordResponse, '\n')[1]
     eventtap.keyStrokes(password)
 end
 
 function getChooserFromCommandResult(aFn, aCommand)
     local chooser = hs.chooser.new(aFn)
     local response = executeCommand(aCommand)
-    local items = fnutils.split(appsList, '\n')
+    local items = fnutils.split(response, '\n')
     local itemsTable = fnutils.imap(items, function(itemName) return {text=itemName} end)
     chooser:choices(itemsTable)
     return chooser
@@ -508,7 +509,7 @@ local ctrl_t_modal_keybindings = {
     ['t'] = {
         {'e', runApp},
         {'m', maximize},
-        {'p', typePassword},
+        {'p', typePass},
         {'t', next_window},
         {'w', showWindowChooser}
     }
