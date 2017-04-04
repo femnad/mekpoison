@@ -22,6 +22,7 @@ local switcher = window.switcher.new()
 local CREDENTIAL_SCRIPT = 'getcred'
 local MODAL_TIMEOUT = 5
 local PASTE_TIMEOUT = 20
+local PASSWORD_LISTING_SCRIPT = 'lipa'
 
 function reload()
     hs.reload()
@@ -419,6 +420,11 @@ function appRunner(appSelection)
     application.launchOrFocus(appSelection.text)
 end
 
+function passTyper(passwordName)
+    local password = executeCommand(passwordName.text)
+    eventtap.keyStrokes(password)
+end
+
 function getChooserFromCommandResult(aFn, aCommand)
     local chooser = hs.chooser.new(aFn)
     local response = executeCommand(aCommand)
@@ -431,6 +437,11 @@ end
 function runApp()
     local appChooser = getChooserFromCommandResult(appRunner, 'ls /Applications')
     appChooser:show()
+end
+
+function typePass()
+    local passwordChooser = getChooserFromCommandResult(passTyper, PASSWORD_LISTING_SCRIPT)
+    passwordChooser:show()
 end
 
 local ctrl_alt_modifier = 'ctrl-alt'
