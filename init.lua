@@ -411,8 +411,9 @@ function startScreensaver()
     caffeinate.startScreensaver()
 end
 
-local base_modifier = 'ctrl-alt'
-local modal_keybindings = {
+local ctrl_alt_modifier = 'ctrl-alt'
+
+local ctrl_alt_modal_keybindings = {
     ['h'] = {
         {'a', showCurrentTimeAndDate},
         {'f', showHints},
@@ -463,24 +464,31 @@ local modal_keybindings = {
     }
 }
 
-for mod_key, bindings in pairs(modal_keybindings) do
-    local modal = hs.hotkey.modal.new(base_modifier, mod_key)
-    bind_modal(modal, '', 'escape', fn_exit_modal)
-    for _i, binding in ipairs(bindings) do
-        local modifier = binding[3]
-        if not modifier then
-            modifier = ''
-        end
-        modal_key, modal_function = binding[1], binding[2]
-        bind_modal(modal, modifier, modal_key, modal_function)
-    end
-end
-
-local hotkeys = {
+local ctrl_alt_hotkeys = {
     t = switch_next,
     n = switch_prev,
 }
 
-for key, fn in pairs(hotkeys) do
-    hs.hotkey.bind(base_modifier, key, nil, fn)
+function bind_modal_keybindings(modal_keybindings, base_modifier)
+    for mod_key, bindings in pairs(modal_keybindings) do
+        local modal = hs.hotkey.modal.new(base_modifier, mod_key)
+        bind_modal(modal, '', 'escape', fn_exit_modal)
+        for _i, binding in ipairs(bindings) do
+            local modifier = binding[3]
+            if not modifier then
+                modifier = ''
+            end
+            modal_key, modal_function = binding[1], binding[2]
+            bind_modal(modal, modifier, modal_key, modal_function)
+        end
+    end
 end
+
+function bind_hotkeys(hotkeys, base_modifier)
+    for key, fn in pairs(hotkeys) do
+        hs.hotkey.bind(base_modifier, key, nil, fn)
+    end
+end
+
+bind_modal_keybindings(ctrl_alt_modal_keybindings, ctrl_alt_modifier)
+bind_hotkeys(ctrl_alt_hotkeys, ctrl_alt_modifier)
