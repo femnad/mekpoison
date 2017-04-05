@@ -24,7 +24,6 @@ local switcher = window.switcher.new()
 local CREDENTIAL_SCRIPT = 'getcred'
 local MODAL_TIMEOUT = 5
 local PASTE_TIMEOUT = 20
-local PASSWORD_LISTING_SCRIPT = 'lipa'
 local TERMINAL = 'iTerm'
 
 function reload()
@@ -432,35 +431,21 @@ end
 local ctrl_alt_modifier = 'ctrl-alt'
 
 local ctrl_alt_modal_keybindings = {
-    -- ['h'] = {
-    --     {'a', showCurrentTimeAndDate},
-    --     {'f', showHints},
-    --     {'g', prev_window},
-    --     {'r', reload},
-    --     {'l', startScreensaver},
-    --     {'c', focus_prev_app_window},
-    --     {'d', show_app_window_hints},
-    --     {'h', next_window},
-    --     {'t', focus_next_app_window},
-    --     {'b', toggle_expose},
-    --     {'v', showBatteryStats},
-    --     {'z', close_application}
-    -- },
-    -- ['m'] = {
-    --     {'g', tile_left_top},
-    --     {'c', tile_left_bottom},
-    --     {'r', tile_right_top},
-    --     {'l', tile_right_bottom},
-    --     {'d', tile_double},
-    --     {'h', tile_left},
-    --     {'t', tile_bottom},
-    --     {'n', tile_top},
-    --     {'s', tile_right},
-    --     {'b', toggle_fullscreen},
-    --     {'m', maximize},
-    --     {'w', frontAndCenter},
-    --     {'v', frontAndCenter50}
-    -- },
+    ['m'] = {
+        {'g', tile_left_top},
+        {'c', tile_left_bottom},
+        {'r', tile_right_top},
+        {'l', tile_right_bottom},
+        {'d', tile_double},
+        {'h', tile_left},
+        {'t', tile_bottom},
+        {'n', tile_top},
+        {'s', tile_right},
+        {'b', toggle_fullscreen},
+        {'m', maximize},
+        {'w', frontAndCenter},
+        {'v', frontAndCenter50}
+    },
     ['p'] = {
         {'o', typeLogin, 'ctrl'},
         {'e', typePasswordAndEnter, 'ctrl'},
@@ -469,17 +454,7 @@ local ctrl_alt_modal_keybindings = {
         {'t', typePassword, 'ctrl'},
         {'u', typePasswordTwice, 'ctrl'},
         {'s', typeLoginTabPassword, 'ctrl'}
-    }-- ,
-    -- ['space'] = {
-    --     {'g', fn_launch_or_focus('HipChat')},
-    --     {'d', fn_launch_or_focus('Dash')},
-    --     {'h', fn_launch_or_focus('iTerm')},
-    --     {'t', fn_launch_or_focus('Nightly')},
-    --     {'n', fn_launch_or_focus('Intellij IDEA')},
-    --     {'s', fn_launch_or_focus('Emacs')},
-    --     {'m', fn_launch_or_focus('Mail')},
-    --     {'space', showWindowChooser}
-    -- }
+    }
 }
 
 local ctrl_alt_hotkeys = {
@@ -525,8 +500,7 @@ function bind_hotkeys(hotkeys, base_modifier)
     end
 end
 
---bind_modal_keybindings(ctrl_alt_modal_keybindings, ctrl_alt_modifier)
---bind_hotkeys(ctrl_alt_hotkeys, ctrl_alt_modifier)
+bind_hotkeys(ctrl_alt_hotkeys, ctrl_alt_modifier)
 
 bind_modal_keybindings(ctrl_t_modal_keybindings, ctrl_t_modifier)
 bind_modal_keybindings(ctrl_alt_modal_keybindings, ctrl_alt_modifier)
