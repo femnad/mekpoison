@@ -14,6 +14,8 @@ local window = hs.window
 require('hs.ipc')
 
 hs.hints.hintChars = {'h', 't', 'n', 's', 'd', 'u', 'e', 'o', 'a', 'i'}
+hs.hints.showTitleThresh = 10
+
 window.animationDuration = 0
 
 local expose = hs.expose.new()
@@ -23,6 +25,7 @@ local CREDENTIAL_SCRIPT = 'getcred'
 local MODAL_TIMEOUT = 5
 local PASTE_TIMEOUT = 20
 local PASSWORD_LISTING_SCRIPT = 'lipa'
+local TERMINAL = 'iTerm'
 
 function reload()
     hs.reload()
@@ -306,7 +309,9 @@ function showWindowChooser()
                 local chosenWindow = fnutils.find(orderedWindows, function(window)
                     return window:title() == chosen.subText
                 end)
-                chosenWindow:focus()
+                if chosenWindow ~= nil then
+                    chosenWindow:focus()
+                end
             end
         end)
     windowChooser:choices(windowNames)
@@ -416,67 +421,46 @@ function startScreensaver()
     caffeinate.startScreensaver()
 end
 
-function appRunner(appSelection)
-    application.launchOrFocus(appSelection.text)
+function runAlfred()
+    application.launchOrFocus('Alfred 3')
 end
 
-function passTyper(passwordName)
-    local passwordResponse = executeCommand('pass ' .. passwordName.text)
-    local password = fnutils.split(passwordResponse, '\n')[1]
-    eventtap.keyStrokes(password)
-end
-
-function getChooserFromCommandResult(aFn, aCommand)
-    local chooser = hs.chooser.new(aFn)
-    local response = executeCommand(aCommand)
-    local items = fnutils.split(response, '\n')
-    local itemsTable = fnutils.imap(items, function(itemName) return {text=itemName} end)
-    chooser:choices(itemsTable)
-    return chooser
-end
-
-function runApp()
-    local appChooser = getChooserFromCommandResult(appRunner, 'ls /Applications')
-    appChooser:show()
-end
-
-function typePass()
-    local passwordChooser = getChooserFromCommandResult(passTyper, PASSWORD_LISTING_SCRIPT)
-    passwordChooser:show()
+function runTerminal()
+    application.launchOrFocus(TERMINAL)
 end
 
 local ctrl_alt_modifier = 'ctrl-alt'
 
 local ctrl_alt_modal_keybindings = {
-    ['h'] = {
-        {'a', showCurrentTimeAndDate},
-        {'f', showHints},
-        {'g', prev_window},
-        {'r', reload},
-        {'l', startScreensaver},
-        {'c', focus_prev_app_window},
-        {'d', show_app_window_hints},
-        {'h', next_window},
-        {'t', focus_next_app_window},
-        {'b', toggle_expose},
-        {'v', showBatteryStats},
-        {'z', close_application}
-    },
-    ['m'] = {
-        {'g', tile_left_top},
-        {'c', tile_left_bottom},
-        {'r', tile_right_top},
-        {'l', tile_right_bottom},
-        {'d', tile_double},
-        {'h', tile_left},
-        {'t', tile_bottom},
-        {'n', tile_top},
-        {'s', tile_right},
-        {'b', toggle_fullscreen},
-        {'m', maximize},
-        {'w', frontAndCenter},
-        {'v', frontAndCenter50}
-    },
+    -- ['h'] = {
+    --     {'a', showCurrentTimeAndDate},
+    --     {'f', showHints},
+    --     {'g', prev_window},
+    --     {'r', reload},
+    --     {'l', startScreensaver},
+    --     {'c', focus_prev_app_window},
+    --     {'d', show_app_window_hints},
+    --     {'h', next_window},
+    --     {'t', focus_next_app_window},
+    --     {'b', toggle_expose},
+    --     {'v', showBatteryStats},
+    --     {'z', close_application}
+    -- },
+    -- ['m'] = {
+    --     {'g', tile_left_top},
+    --     {'c', tile_left_bottom},
+    --     {'r', tile_right_top},
+    --     {'l', tile_right_bottom},
+    --     {'d', tile_double},
+    --     {'h', tile_left},
+    --     {'t', tile_bottom},
+    --     {'n', tile_top},
+    --     {'s', tile_right},
+    --     {'b', toggle_fullscreen},
+    --     {'m', maximize},
+    --     {'w', frontAndCenter},
+    --     {'v', frontAndCenter50}
+    -- },
     ['p'] = {
         {'o', typeLogin, 'ctrl'},
         {'e', typePasswordAndEnter, 'ctrl'},
@@ -485,17 +469,17 @@ local ctrl_alt_modal_keybindings = {
         {'t', typePassword, 'ctrl'},
         {'u', typePasswordTwice, 'ctrl'},
         {'s', typeLoginTabPassword, 'ctrl'}
-    },
-    ['space'] = {
-        {'g', fn_launch_or_focus('HipChat')},
-        {'d', fn_launch_or_focus('Dash')},
-        {'h', fn_launch_or_focus('iTerm')},
-        {'t', fn_launch_or_focus('Nightly')},
-        {'n', fn_launch_or_focus('Intellij IDEA')},
-        {'s', fn_launch_or_focus('Emacs')},
-        {'m', fn_launch_or_focus('Mail')},
-        {'space', showWindowChooser}
-    }
+    }-- ,
+    -- ['space'] = {
+    --     {'g', fn_launch_or_focus('HipChat')},
+    --     {'d', fn_launch_or_focus('Dash')},
+    --     {'h', fn_launch_or_focus('iTerm')},
+    --     {'t', fn_launch_or_focus('Nightly')},
+    --     {'n', fn_launch_or_focus('Intellij IDEA')},
+    --     {'s', fn_launch_or_focus('Emacs')},
+    --     {'m', fn_launch_or_focus('Mail')},
+    --     {'space', showWindowChooser}
+    -- }
 }
 
 local ctrl_alt_hotkeys = {
@@ -507,11 +491,16 @@ ctrl_t_modifier = 'ctrl'
 
 local ctrl_t_modal_keybindings = {
     ['t'] = {
-        {'e', runApp},
+        {'a', showCurrentTimeAndDate},
+        {'b', toggle_fullscreen},
+        {'c', runTerminal},
+        {'e', showWindowChooser},
         {'m', maximize},
-        {'p', typePass},
+        {'o', runAlfred},
+        {'q', startScreensaver},
         {'t', next_window},
-        {'w', showWindowChooser}
+        {'u', showHints},
+        {'z', close_application}
     }
 }
 
@@ -540,3 +529,4 @@ end
 --bind_hotkeys(ctrl_alt_hotkeys, ctrl_alt_modifier)
 
 bind_modal_keybindings(ctrl_t_modal_keybindings, ctrl_t_modifier)
+bind_modal_keybindings(ctrl_alt_modal_keybindings, ctrl_alt_modifier)
