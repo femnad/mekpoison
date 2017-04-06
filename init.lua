@@ -13,7 +13,7 @@ local window = hs.window
 
 require('hs.ipc')
 
-hs.hints.hintChars = {'h', 't', 'n', 's', 'd', 'u', 'e', 'o', 'a', 'i'}
+hs.hints.style = "vimperator"
 hs.hints.showTitleThresh = 10
 
 window.animationDuration = 0
@@ -457,7 +457,12 @@ local ctrl_alt_modal_keybindings = {
     }
 }
 
+function paste()
+    eventtap.keyStrokes(executeCommand('pbpaste'))
+end
+
 local ctrl_alt_hotkeys = {
+    v = paste,
     t = switch_next,
     n = switch_prev,
 }
@@ -469,13 +474,13 @@ local ctrl_t_modal_keybindings = {
         {'a', showCurrentTimeAndDate},
         {'b', toggle_fullscreen},
         {'c', runTerminal},
-        {'e', showWindowChooser},
+        {'e', runAlfred},
         {'m', maximize},
-        {'o', runAlfred},
         {'q', startScreensaver},
         {'t', next_window},
-        {'u', showHints},
-        {'z', close_application}
+        {'u', showWindowChooser},
+        {'z', close_application},
+        {'space', showHints}
     }
 }
 
