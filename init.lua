@@ -6,9 +6,11 @@ local chooser = hs.chooser
 local eventtap = hs.eventtap
 local execute = hs.execute
 local fnutils = hs.fnutils
+local keycodes = hs.keycodes
 local pasteboard = hs.pasteboard
 local screen = hs.screen
 local timer = hs.timer
+local usb = hs.usb
 local window = hs.window
 
 require('hs.ipc')
@@ -28,6 +30,12 @@ local TERMINAL = 'iTerm'
 
 function reload()
     hs.reload()
+end
+
+function printTable(aTable)
+    for i, v in pairs(aTable) do
+        print(i, v)
+    end
 end
 
 function toggle_expose()
@@ -475,6 +483,7 @@ local ctrl_t_modal_keybindings = {
         {'b', toggle_fullscreen},
         {'c', runTerminal},
         {'e', runAlfred},
+        {'g', focus_next_app_window},
         {'m', maximize},
         {'q', startScreensaver},
         {'t', next_window},
@@ -509,3 +518,20 @@ bind_hotkeys(ctrl_alt_hotkeys, ctrl_alt_modifier)
 
 bind_modal_keybindings(ctrl_t_modal_keybindings, ctrl_t_modifier)
 bind_modal_keybindings(ctrl_alt_modal_keybindings, ctrl_alt_modifier)
+
+function getPlanckWatcher()
+    return usb.watcher.new(function(event)
+        if event.vendorID == 65261 and event.productID == 24672 then
+            if event.eventType == 'added' then
+                keycodes.setLayout('U.S.')
+                _alert("Planck In!")
+            elseif event.eventType == 'removed' then
+                keycodes.setLayout('Dvorak')
+                _alert("Planck Out!")
+            end
+        end
+    end)
+end
+
+planckWatcher = getPlanckWatcher()
+planckWatcher:start()
