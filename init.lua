@@ -453,6 +453,7 @@ local ctrl_alt_modal_keybindings = {
         {'s', tile_right},
         {'b', toggle_fullscreen},
         {'m', maximize},
+        {'q', startScreensaver},
         {'w', frontAndCenter},
         {'v', frontAndCenter50}
     },
@@ -487,7 +488,6 @@ local ctrl_t_modal_keybindings = {
         {'e', runAlfred},
         {'g', focus_next_app_window},
         {'m', maximize},
-        {'q', startScreensaver},
         {'t', next_window},
         {'u', showWindowChooser},
         {'z', close_application},
@@ -522,19 +522,32 @@ bind_modal_keybindings(ctrl_t_modal_keybindings, ctrl_t_modifier)
 bind_modal_keybindings(ctrl_alt_modal_keybindings, ctrl_alt_modifier)
 
 function isOlkbKeyboardEvent(event)
-    return event.vendorID == OLKB_KEYBOARDS_VENDOR_ID and OLKB_KEYBOARD_IDS_TO_WATCH_FOR.contains(event.productID)
+    return event.vendorID == OLKB_KEYBOARDS_VENDOR_ID
+        and fnutils.contains(OLKB_KEYBOARD_IDS_TO_WATCH_FOR, event.productID)
+end
+
+function olkbIn()
+    keycodes.setLayout('U.S.')
+    karabinerApp = application.find('karabiner')
+    if karabinerApp ~= nil then
+        karabinerApp:kill()
+    end
+    reload()
+end
+
+function olkbOut()
+    keycodes.setLayout('Dvorak')
+    executeCommand('open /Applications/Karabiner-Elements.app')
+    reload()
 end
 
 function getOlkbWatcher()
     return usb.watcher.new(function(event)
         if isOlkbKeyboardEvent(event) then
-            local deviceName = 'OLBK Keyboard'
             if event.eventType == 'added' then
-                keycodes.setLayout('U.S.')
-                _alert(deviceName .. " In!")
+                olkbIn()
             elseif event.eventType == 'removed' then
-                keycodes.setLayout('Dvorak')
-                _alert(deviceName .. " Out!")
+                olkbOut()
             end
         end
     end)
