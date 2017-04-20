@@ -25,6 +25,8 @@ local switcher = window.switcher.new()
 
 local CREDENTIAL_SCRIPT = 'getcred'
 local MODAL_TIMEOUT = 5
+local OLKB_KEYBOARDS_VENDOR_ID = 65261
+local OLKB_KEYBOARD_IDS_TO_WATCH_FOR = {24672, 24673}
 local PASTE_TIMEOUT = 20
 local TERMINAL = 'iTerm'
 
@@ -519,19 +521,24 @@ bind_hotkeys(ctrl_alt_hotkeys, ctrl_alt_modifier)
 bind_modal_keybindings(ctrl_t_modal_keybindings, ctrl_t_modifier)
 bind_modal_keybindings(ctrl_alt_modal_keybindings, ctrl_alt_modifier)
 
-function getPlanckWatcher()
+function isOlkbKeyboardEvent(event)
+    return event.vendorID == OLKB_KEYBOARDS_VENDOR_ID and OLKB_KEYBOARD_IDS_TO_WATCH_FOR.contains(event.productID)
+end
+
+function getOlkbWatcher()
     return usb.watcher.new(function(event)
-        if event.vendorID == 65261 and event.productID == 24672 then
+        if isOlkbKeyboardEvent(event) then
+            local deviceName = 'OLBK Keyboard'
             if event.eventType == 'added' then
                 keycodes.setLayout('U.S.')
-                _alert("Planck In!")
+                _alert(deviceName .. " In!")
             elseif event.eventType == 'removed' then
                 keycodes.setLayout('Dvorak')
-                _alert("Planck Out!")
+                _alert(deviceName .. " Out!")
             end
         end
     end)
 end
 
-planckWatcher = getPlanckWatcher()
-planckWatcher:start()
+olkbWatcher = getOlkbWatcher()
+olkbWatcher:start()
