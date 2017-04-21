@@ -6,6 +6,7 @@ local chooser = hs.chooser
 local eventtap = hs.eventtap
 local execute = hs.execute
 local fnutils = hs.fnutils
+local notify = hs.notify
 local keycodes = hs.keycodes
 local pasteboard = hs.pasteboard
 local screen = hs.screen
@@ -28,6 +29,7 @@ local MODAL_TIMEOUT = 5
 local OLKB_KEYBOARDS_VENDOR_ID = 65261
 local OLKB_KEYBOARD_IDS_TO_WATCH_FOR = {24672, 24673}
 local PASTE_TIMEOUT = 20
+local REMINDER_PERIOD = 60 * 30
 local TERMINAL = 'iTerm'
 
 function reload()
@@ -555,3 +557,9 @@ end
 
 olkbWatcher = getOlkbWatcher()
 olkbWatcher:start()
+
+function showReminder()
+    notify.show('Yo', 'Gabba', 'Gabba!')
+end
+
+timer.doEvery(REMINDER_PERIOD, showReminder)
