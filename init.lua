@@ -36,12 +36,6 @@ function reload()
     hs.reload()
 end
 
-function printTable(aTable)
-    for i, v in pairs(aTable) do
-        print(i, v)
-    end
-end
-
 function toggle_expose()
     expose:toggleShow()
 end
@@ -492,6 +486,7 @@ local ctrl_t_modal_keybindings = {
         {'m', maximize},
         {'t', next_window},
         {'u', showWindowChooser},
+        {'v', showBatteryStats},
         {'z', close_application},
         {'space', showHints}
     }
@@ -535,12 +530,14 @@ function olkbIn()
         karabinerApp:kill()
     end
     reload()
+    notify.show('Bring', 'OLKB', 'on')
 end
 
 function olkbOut()
     keycodes.setLayout('Dvorak')
     executeCommand('open /Applications/Karabiner-Elements.app')
     reload()
+    notify.show('Ready', 'for', 'No OLKB')
 end
 
 function getOlkbWatcher()
