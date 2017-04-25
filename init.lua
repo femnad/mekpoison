@@ -22,15 +22,18 @@ hs.hints.showTitleThresh = 10
 window.animationDuration = 0
 
 local expose = hs.expose.new()
-local switcher = window.switcher.new()
 
 local CREDENTIAL_SCRIPT = 'getcred'
+
 local MODAL_TIMEOUT = 5
-local OLKB_KEYBOARDS_VENDOR_ID = 65261
-local OLKB_KEYBOARD_IDS_TO_WATCH_FOR = {24672, 24673}
+local KEYBOARD_EVENT_WAIT_PERIOD = 3
 local PASTE_TIMEOUT = 20
 local REMINDER_PERIOD = 60 * 30
+
 local TERMINAL = 'iTerm'
+
+local USB_PRODUCT_IDS_TO_WATCH_FOR = {24672, 24673}
+local USB_VENDOR_IDS_TO_WATCH_FOR = {65261}
 
 function reload()
     hs.reload()
@@ -330,14 +333,6 @@ function fn_launch_or_focus(app_name)
     end
 end
 
-function switch_next()
-    switcher:next()
-end
-
-function switch_prev()
-    switcher:previous()
-end
-
 function showBatteryStats()
     local charge = battery.percentage()
     local remaining = battery.timeRemaining()
@@ -452,15 +447,6 @@ local ctrl_alt_modal_keybindings = {
         {'q', startScreensaver},
         {'w', frontAndCenter},
         {'v', frontAndCenter50}
-    },
-    ['p'] = {
-        {'o', typeLogin, 'ctrl'},
-        {'e', typePasswordAndEnter, 'ctrl'},
-        {'c', copyPassword, 'ctrl'},
-        {'l', typeLoginTabPasswordEnter, 'ctrl'},
-        {'t', typePassword, 'ctrl'},
-        {'u', typePasswordTwice, 'ctrl'},
-        {'s', typeLoginTabPassword, 'ctrl'}
     }
 }
 
@@ -469,9 +455,14 @@ function paste()
 end
 
 local ctrl_alt_hotkeys = {
-    v = paste,
-    t = switch_next,
-    n = switch_prev,
+    c = copyPassword,
+    e = typePasswordAndEnter,
+    l = typeLoginTabPasswordEnter,
+    o = typeLogin,
+    s = typeLoginTabPassword,
+    t = typePassword,
+    u = typePasswordTwice,
+    v = paste
 }
 
 ctrl_t_modifier = 'ctrl'
@@ -518,42 +509,51 @@ bind_hotkeys(ctrl_alt_hotkeys, ctrl_alt_modifier)
 bind_modal_keybindings(ctrl_t_modal_keybindings, ctrl_t_modifier)
 bind_modal_keybindings(ctrl_alt_modal_keybindings, ctrl_alt_modifier)
 
-function isOlkbKeyboardEvent(event)
-    return event.vendorID == OLKB_KEYBOARDS_VENDOR_ID
-        and fnutils.contains(OLKB_KEYBOARD_IDS_TO_WATCH_FOR, event.productID)
+function isKeyboardEvent(event)
+   return fnutils.contains(USB_VENDOR_IDS_TO_WATCH_FOR, event.vendorID)
+        and fnutils.contains(USB_PRODUCT_IDS_TO_WATCH_FOR, event.productID)
 end
 
-function olkbIn()
-    keycodes.setLayout('U.S.')
+function killKarabiner()
     karabinerApp = application.find('karabiner')
     if karabinerApp ~= nil then
         karabinerApp:kill()
     end
-    reload()
-    notify.show('Bring', 'OLKB', 'on')
 end
 
-function olkbOut()
-    keycodes.setLayout('Dvorak')
+function runKarabiner()
     executeCommand('open /Applications/Karabiner-Elements.app')
-    reload()
-    notify.show('Ready', 'for', 'No OLKB')
 end
 
-function getOlkbWatcher()
+function processKeyboardEvent(event, newLayout, message, aFn)
+    keycodes.setLayout(newLayout)
+    reload()
+    timer.doAfter(KEYBOARD_EVENT_WAIT_PERIOD, aFn)
+    notify.show(message, event.vendorName, event.productName)
+end
+
+function keyboardIn()
+    processKeyboardEvent(event, 'U.S.', 'Keyboard In', killKarabiner)
+end
+
+function keyboardOut(event)
+    processKeyboardEvent(event, 'Dvorak', 'Keyboard Out', runKarabiner)
+end
+
+function getKeyboardWatcher()
     return usb.watcher.new(function(event)
-        if isOlkbKeyboardEvent(event) then
+        if isKeyboardEvent(event) then
             if event.eventType == 'added' then
-                olkbIn()
+                keyboardIn(event)
             elseif event.eventType == 'removed' then
-                olkbOut()
+                keyboardOut(event)
             end
         end
     end)
 end
 
-olkbWatcher = getOlkbWatcher()
-olkbWatcher:start()
+keyboardWatcher = getKeyboardWatcher()
+keyboardWatcher:start()
 
 function showReminder()
     notify.show('Yo', 'Gabba', 'Gabba!')
