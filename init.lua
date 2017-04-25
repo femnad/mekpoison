@@ -532,7 +532,7 @@ function processKeyboardEvent(event, newLayout, message, aFn)
     notify.show(message, event.vendorName, event.productName)
 end
 
-function keyboardIn()
+function keyboardIn(event)
     processKeyboardEvent(event, 'U.S.', 'Keyboard In', killKarabiner)
 end
 
@@ -540,14 +540,15 @@ function keyboardOut(event)
     processKeyboardEvent(event, 'Dvorak', 'Keyboard Out', runKarabiner)
 end
 
+keyboardFns = {
+    added = keyboardIn,
+    removed = keyboardOut
+}
+
 function getKeyboardWatcher()
     return usb.watcher.new(function(event)
         if isKeyboardEvent(event) then
-            if event.eventType == 'added' then
-                keyboardIn(event)
-            elseif event.eventType == 'removed' then
-                keyboardOut(event)
-            end
+            keyboardFns[event.eventType](event)
         end
     end)
 end
