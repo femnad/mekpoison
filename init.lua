@@ -37,6 +37,7 @@ local USB_VENDOR_IDS_TO_WATCH_FOR = {65261}
 
 function reload()
     hs.reload()
+    notify.show('Hammerspoon', 'Reloaded', 'Your move, Creep')
 end
 
 function toggle_expose()
@@ -102,7 +103,10 @@ function showHints()
 end
 
 function close_application()
-    window.focusedWindow():close()
+    local focusedWindow = window.focusedWindow()
+    if focusedWindow ~= nil then
+        focusedWindow:close()
+    end
 end
 
 function modalTimeout(modal)
@@ -352,15 +356,15 @@ function runGetCred(arguments)
     end
 end
 
-function typeCredential(credentialType, typeEnter, notify)
+function typeCredential(credentialType, typeEnter, afterNotify)
     local credential = runGetCred(credentialType)
     if credential then
         eventtap.keyStrokes(credential)
         if typeEnter then
             eventtap.keyStroke({}, 'return')
         end
-        if notify then
-            _alert('Go Ahead, TACCOM')
+        if afterNotify then
+            notify.show('Go Ahead, TACCOM', 'Ready, when you are', 'No really, take your time')
         end
     end
 end
@@ -372,7 +376,7 @@ end
 function copyPassword()
     local password = _getPassword()
     pasteboard.setContents(password)
-    _alert('You have ' .. PASTE_TIMEOUT .. ' seconds to comply')
+    notify.show('Password copied', 'You have 5 seconds to comply', 'Actually it\'s ' .. PASTE_TIMEOUT)
     timer.doAfter(PASTE_TIMEOUT, function()
         pasteboard.setContents('')
     end)
@@ -383,11 +387,11 @@ function typeLogin()
 end
 
 function typePassword()
-    typeCredential('password')
+    typeCredential('password', false, true)
 end
 
 function typePasswordAndEnter()
-    typeCredential('password', true)
+    typeCredential('password', true, false)
 end
 
 function _typeBoth(endWithReturn)
@@ -526,10 +530,10 @@ function runKarabiner()
 end
 
 function processKeyboardEvent(event, newLayout, message, aFn)
-    keycodes.setLayout(newLayout)
-    reload()
-    timer.doAfter(KEYBOARD_EVENT_WAIT_PERIOD, aFn)
     notify.show(message, event.vendorName, event.productName)
+    keycodes.setLayout(newLayout)
+    aFn()
+    timer.doAfter(KEYBOARD_EVENT_WAIT_PERIOD, reload)
 end
 
 function keyboardIn(event)
