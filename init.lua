@@ -32,8 +32,8 @@ local REMINDER_PERIOD = 60 * 30
 
 local TERMINAL = 'iTerm'
 
-local USB_PRODUCT_IDS_TO_WATCH_FOR = {24672, 24673}
 local USB_VENDOR_IDS_TO_WATCH_FOR = {65261}
+local USB_PRODUCT_IDS_TO_WATCH_FOR = {24672, 24673, 25700}
 
 function reload()
     hs.reload()
